@@ -156,7 +156,7 @@ class ScanFacture():
 
     def get_pages_from_any_pdf(self):
         print("Récupération des pages du fichier PDF, merci de patienter...")
-        poppler_path = glob.glob("poppler*/goo") if  glob.glob("poppler*/") else glob.glob("C:\\Program Files\\poppler*\\") 
+        poppler_path = glob.glob("poppler*\\bin") if  glob.glob("poppler*\\bin") else glob.glob("C:\\Program Files\\poppler*\\Library\\bin") 
         print(poppler_path)
         if not poppler_path:
             print("Mince, l'application poppler est manquante!\nVeuillez la télécharger en suivant ce lien : https://poppler.freedesktop.org/\nUne fois sur le site, téléchargez la dernière archive de poppler (par exemple poppler-22.04.0.tar.xz).\nOuvrez ensuite le fichier archive téléchargé et extrayez son contenu dans le dossier C:\Program Files\\\nDans cet exemple, votre dossier devrait ressembler à ça : C:\Program Files\poppler-22.04.0\nÀ partir de ce moment là, vous pourrez relancer l'application :)")
@@ -672,7 +672,7 @@ class ScanFacture():
             self.rename_used_pdf()
             user_input=self.ask_user_choices("Souhaitez-vous traiter un autre fichier ?",["Oui","Non"],has_ignore_answer=False)
             if user_input -1 :
-                print("Bonne journée :) !")
+                print("Fermeture de l'application.\nBonne journée :) !")
                 time.sleep(3)
                 break
 

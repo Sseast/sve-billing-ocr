@@ -1,3 +1,4 @@
+from turtle import pos
 from pdf2image import convert_from_path
 import pytesseract
 pytesseract.pytesseract.tesseract_cmd = 'C:\\Program Files\\Tesseract-OCR\\tesseract.exe'  # your path may be different
@@ -13,6 +14,8 @@ import matplotlib.pyplot as plt
 import tkinter.filedialog as fd
 from PyPDF2 import PdfFileReader, PdfFileWriter
 import glob
+from pathlib import Path
+
 
 """
 Goal :
@@ -49,7 +52,8 @@ sys.excepthook = show_exception_and_exit
 class ScanFacture():
     def __init__(self):
         self.initVariable()
-        self.initDataFrame()
+        self.init_dataframe_proprietaire()
+        self.init_dataframe_prestataire()
 
     def initVariable(self):
         self.scanned_text=None
@@ -58,8 +62,33 @@ class ScanFacture():
         self.numero_mandat_proprietaire=None
         self.addresse_proprietaire=None
         self.prix_ttc=None
+
+        self.nom_prestataire=None
     
-    def initDataFrame(self):
+    def init_dataframe_prestataire(self):
+        df_prestataire=None
+        filename=glob.glob("*frn*")[0]
+        df_prestataire = pd.read_excel(filename)
+
+
+
+        df_prestataire = df_prestataire[["Unnamed: 1", "Unnamed: 5"]].dropna()
+        df_prestataire=df_prestataire.rename(columns={"Unnamed: 1": 'Numéro prestataire', "Unnamed: 5": "Nom préstataire"})
+        df_prestataire=df_prestataire.sort_values("Nom préstataire")
+        df_prestataire=df_prestataire.replace(to_replace = r'\s\(\d*\)', value ="", regex=True)
+        df_prestataire=df_prestataire.drop_duplicates(subset=['Nom préstataire'])
+
+        self.list_numero_prestataire = list(set(df_prestataire['Numéro prestataire']))
+        # self.list_numero_prestataire.sort()
+
+        self.list_nom_prestataire = list(set(df_prestataire['Nom préstataire']))
+        # self.list_nom_prestataire.sort()
+
+        # print(self.list_nom_prestataire)
+
+        pass
+
+    def init_dataframe_proprietaire(self):
         frozen = 'not'
         if getattr(sys, 'frozen', False):
             # we are running in a bundle
@@ -105,9 +134,6 @@ class ScanFacture():
 
         self.directory_pdf='/'.join(self.pdf.split('/')[0:-1])
         self.filename_pdf=self.pdf.split('/')[-1]
-        
-        print("self.directory_pdf",self.directory_pdf)
-        print("self.filename_pdf",self.filename_pdf)
         
         if not self.pdf:
             sys.exit()
@@ -187,7 +213,6 @@ class ScanFacture():
         print("\n------------------------------------")
         print("---  Recherche Nom Proprietaire  ---")
         print("------------------------------------")
-        self.display_found_variables()
         if self.numero_mandat_proprietaire:
             self.nom_proprietaire = self.df_mandats.loc[self.df_mandats.MANDAT == str(self.numero_mandat_proprietaire), 'NOM_PROPRIETAIRE'].values.item()
             # self.addresse_proprietaire = self.df_mandats.loc[self.df_mandats.MANDAT == str(self.numero_mandat_proprietaire), 'ADRESSE_LOCATION'].values.item()
@@ -270,7 +295,6 @@ class ScanFacture():
         print("\n----------------------------------------")
         print("---  Recherche Adresse Proprietaire  ---")
         print("----------------------------------------")
-        self.display_found_variables()
 
         # Si valeurs déjà connues
         if self.numero_mandat_proprietaire:
@@ -280,7 +304,10 @@ class ScanFacture():
         
         elif self.nom_proprietaire :
             possible_matches = self.df_mandats.loc[self.df_mandats.NOM_PROPRIETAIRE == self.nom_proprietaire, 'ADRESSE_LOCATION'].values.tolist()
-            
+            if len(possible_matches)==1:
+                self.addresse_proprietaire=possible_matches[0]
+                return
+
             addresse_proprietaire = self.ask_and_return_possible_match(possible_matches)
             if addresse_proprietaire :
                 self.addresse_proprietaire=addresse_proprietaire
@@ -311,7 +338,7 @@ class ScanFacture():
             possible_matches=list(dict.fromkeys(possible_matches))
             possible_matches=possible_matches[:5]
             possible_matches = [tuple[0] for tuple in possible_matches]
-            
+                
             addresse_proprietaire = self.ask_and_return_possible_match(possible_matches)
             if addresse_proprietaire : 
                 self.addresse_proprietaire=addresse_proprietaire
@@ -352,7 +379,6 @@ class ScanFacture():
         print("\n----------------------------------------------")
         print("---  Recherche numéro mandat proprietaire  ---")
         print("----------------------------------------------")
-        self.display_found_variables()
         
         if self.nom_proprietaire and self.addresse_proprietaire:
             possible_matches = self.df_mandats.loc[(self.df_mandats['NOM_PROPRIETAIRE'] == str(self.nom_proprietaire) )&(self.df_mandats['ADRESSE_LOCATION'] == str(self.addresse_proprietaire) ),"MANDAT"].values.tolist()
@@ -397,8 +423,7 @@ class ScanFacture():
         self.nom_proprietaire=self.nom_proprietaire.replace("/","-").replace("\\","-")
         timestr = time.strftime("%Y%m%d-%H%M%S")
         time_year = time.strftime("%Y")
-        dst = f'{self.directory_pdf}/{time_year}/{self.numero_mandat_proprietaire}/{self.numero_mandat_proprietaire} - {self.nom_proprietaire} - {self.addresse_proprietaire} - {self.prix_ttc} - {timestr}.pdf'
-        
+        dst = f'{self.directory_pdf}/{time_year}/{self.numero_mandat_proprietaire}/{self.nom_prestataire}/{self.numero_mandat_proprietaire} - {self.nom_proprietaire} - {self.addresse_proprietaire} - {self.prix_ttc} - {timestr}.pdf'
         print("La page traitée a été sauvegardée dans un fichier séparé.\n",dst,"\n")
         
         directory_mandat = self.numero_mandat_proprietaire
@@ -406,8 +431,12 @@ class ScanFacture():
         if not os.path.exists(self.directory_pdf+"/"+str(time_year)):
             os.makedirs(self.directory_pdf+"/"+str(time_year))
 
-        if not os.path.exists(self.directory_pdf+"/"+str(time_year+"/"+directory_mandat)):
-            os.makedirs(self.directory_pdf+"/"+str(time_year+"/"+directory_mandat))
+
+        if not os.path.exists(self.directory_pdf+"/"+str(time_year)+"/"+str(directory_mandat)):
+            os.makedirs(self.directory_pdf+"/"+str(time_year)+"/"+str(directory_mandat))
+            
+        if not os.path.exists(self.directory_pdf+"/"+str(time_year)+"/"+str(directory_mandat)+"/"+str(self.nom_prestataire)):
+            os.makedirs(self.directory_pdf+"/"+str(time_year)+"/"+str(directory_mandat)+"/"+str(self.nom_prestataire))
             
         output = PdfFileWriter()
         output.addPage(self.pdf_file_reader_object.getPage(i))
@@ -425,8 +454,8 @@ class ScanFacture():
 
     def display_found_variables(self):
         print("Valeurs retrouvées : ")
-        d=[('N/A' if v is None else v for v in [self.numero_mandat_proprietaire,self.nom_proprietaire,self.addresse_proprietaire,self.prix_ttc])]
-        df = pd.DataFrame(d, columns = ['N°','Nom','Adresse','prix'])
+        d=[('N/A' if v is None else v for v in [self.numero_mandat_proprietaire,self.nom_proprietaire,self.addresse_proprietaire,self.prix_ttc,self.nom_prestataire])]
+        df = pd.DataFrame(d, columns = ['N°','Nom','Adresse','prix','nom_prestataire'])
 
         print(df.to_string(index=False))
 
@@ -501,7 +530,6 @@ class ScanFacture():
         
     def rename_used_pdf(self):
         used_pdf_directory = self.directory_pdf+"/PDF traités"
-        print("self.directory_pdf",self.directory_pdf)
         
         if not os.path.exists(str(used_pdf_directory)):
             os.makedirs(str(used_pdf_directory))
@@ -514,7 +542,84 @@ class ScanFacture():
         
         print("Fichier traité et déplacé !\n",new_directory_and_filename,"\n")
         pass
-   
+            
+    def find_prestataire(self):
+        if self.nom_prestataire:
+            return
+        
+        possible_matches=[]
+        scanned_text = self.scanned_text_concatenated
+
+        print("\n----------------------------------------")
+        print("---------  Recherche Prestataire  ---------")
+        print("----------------------------------------")
+
+        # Méthode match direct
+        possible_matches=[]
+
+        regex = ''
+        for nom_prestataire in self.list_nom_prestataire:
+            if re.search(r'' + nom_prestataire.upper() + r'', self.scanned_text.upper()):
+            # if re.search(r'.EDF.', scanned_text.upper()):
+                possible_matches.append(nom_prestataire)
+
+
+        if possible_matches:
+            possible_matches=possible_matches[:5]
+            nom_prestataire = self.ask_and_return_possible_match(possible_matches)
+            print(nom_prestataire)
+            if nom_prestataire : 
+                self.nom_prestataire=nom_prestataire
+                return
+
+        # Méthode approximation
+        if False:
+            #Méthode approximative
+            lines = [line for line in self.scanned_text.splitlines() if len(line)>2 & len(line)<27]
+            possible_matches=[]
+            print(lines)
+            print(len(lines))
+            for nom_prestataire in self.list_nom_prestataire:
+                possible_match=self.get_matches(nom_prestataire,lines)
+                if possible_match[1]>=95:
+                    print(possible_match[0])
+                    possible_matches.insert(0,(nom_prestataire,possible_match[1]))
+                # elif(possible_match[1]>87):
+                #     possible_matches.append((nom_prestataire,possible_match[1]))
+                
+            if possible_matches:
+                print("J'ai trouvé quelque chose !")
+                possible_matches=sorted(possible_matches, key = lambda x: x[1],reverse=True)
+                possible_matches=list(dict.fromkeys(possible_matches))
+                possible_matches=possible_matches[:5]
+
+                possible_matches = [tuple[0] for tuple in possible_matches]
+                
+                nom_prestataire = self.ask_and_return_possible_match(possible_matches)
+                if nom_prestataire:
+                    self.nom_prestataire=nom_prestataire
+                    return
+            else :
+                # print("La recherche approximative n'a rien donné.\n")
+                pass
+
+
+        print("Essayez vous pour voir ?\n(Vous pouvez écrire approximativement)")
+        # self.clear_variables()
+        while True:
+            user_input=str(input("Tapez le nom du prestataire : ").upper())
+            results = [nom_prestataire for nom_prestataire in self.list_nom_prestataire if user_input in nom_prestataire]
+            results=results[:10]
+            
+            if results:
+                user_input=self.ask_user_choices("Choisissez : ",results)
+                if not user_input==len(results):
+                    self.nom_prestataire = results[user_input-1]
+                    return
+            if self.ask_user_choices("Pas de résultat : ",["Réessayer","Autre méthode"],has_ignore_answer=False) -1 : 
+                return
+    
+
     def apply(self):
         while True :
             self.open_pdf()
@@ -524,7 +629,7 @@ class ScanFacture():
                 self.page_into_grayscale(self.pages[i])
                 plt.imshow(self.img_normal)
                 self.show_multiple_image()
-                         
+                
                 #On demande s'il s'agit d'une facture pour passer ou non à la page suivante
                 if self.ask_user_choices("Cette page est-elle une facture ? : ",["Oui","Non"],has_ignore_answer=False) -1 : 
                     continue
@@ -534,11 +639,19 @@ class ScanFacture():
                 self.find_possible_prix_ttc()
 
                 while True:
+                    self.display_found_variables()
                     self.find_nom_proprietaire()
+                    
+                    self.display_found_variables()
                     self.find_addresse_proprietaire()
+                    
+                    self.display_found_variables()
                     self.find_numero_mandat_proprietaire()
-
+                    
+                    self.display_found_variables()
+                    self.find_prestataire()
                     if self.nom_proprietaire and self.addresse_proprietaire and self.numero_mandat_proprietaire :
+                        self.display_found_variables()
                         user_input=self.ask_user_choices("Est-ce correct ? : ",["Oui","Non"],has_ignore_answer=False)
                         if user_input == 1:
                             break
@@ -555,7 +668,7 @@ class ScanFacture():
             self.rename_used_pdf()
             user_input=self.ask_user_choices("Souhaitez-vous traiter un autre fichier ?",["Oui","Non"],has_ignore_answer=False)
             if user_input -1 :
-                print("J'espère avoir pu vous aider, passez une bonne journée :) !")
+                print("J'espère avoir pu vous aider, bonne journée :) !")
                 time.sleep(3)
                 break
 
@@ -565,9 +678,54 @@ def check_missing_modules():
     if not poppler_path:
         print("Mince, l'application poppler est manquante!\nVeuillez la télécharger en suivant ce lien : https://poppler.freedesktop.org/\nUne fois sur le site, téléchargez la dernière archive de poppler (par exemple à poppler-22.04.0.tar.xz).\nOuvez ensuite le fichier archive téléchargé et extrayez son contenu dans le dossier C:\Program Files\\\nDans cet exemple, votre dossier devrait ressembler à ça : C:\Program Files\poppler-22.04.0\nÀ partir de ce moment là, vous pourrez relancer l'application :)")
         quit()
+class DataReader():
+    def __init__(self):
+        pass
+    def open_qpr(self):
+        pass
+    def open_xlsx(self):
+        try:
+            # Si jamais il y a plusieurs fichiers Mandats, on prend le 1er de la liste
+            filename=glob.glob("*frn*")[0]
+            print(filename)
+            
+            file_path = Path(filename)
+            file_extension = file_path.suffix.lower()[1:]
+
+            pre = os.getcwd()
+            path = os.path.join(pre,filename)
+
+            # df_mandats = pd.read_excel(path).astype(str)
+                        
+            file_extension = file_path.suffix.lower()[1:]
+            print(file_extension)
+            if file_extension == 'xlsx':
+                df = pd.read_excel(filename, header=1,usecols=['item_type', 'order id', 'order date', 'state', 'priority'])
+            elif file_extension == 'xls':
+                print("------   ----------------------------------------------------------")
+                # df = pd.read_excel(filename, engine='xlrd')
+                # df = pd.read_excel(filename, header=None)
+                # df.to_excel(filename, index=False, header=False)
+                # df = pd.read_excel(filename,  engine='openpyxl')
+                print("------   ----------------------------------------------------------")
+                
+            elif file_extension == 'csv':
+                df = pd.read_csv(filename)
+            else:
+                raise Exception("File not supported")
+
+            print(df)
+        except Exception as err:
+            print(err)
+            
+        pass
 
 def main():
     print("Lancement de l'application, veuillez patienter...")
+
+    # qpr = DataReader()
+    # qpr.open_xlsx()
+
     scanner = ScanFacture()
     scanner.apply()
        

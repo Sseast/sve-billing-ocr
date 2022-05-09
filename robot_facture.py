@@ -1,7 +1,7 @@
 from turtle import pos
 from pdf2image import convert_from_path
 import pytesseract
-pytesseract.pytesseract.tesseract_cmd = 'C:\\Program Files\\Tesseract-OCR\\tesseract.exe'  # your path may be different
+pytesseract.pytesseract.tesseract_cmd = 'T:\\INFORMATIQUE\\Rex Rotary\\Robot Analyse Facture\\Tesseract-OCR\\tesseract.exe'  # your path may be different
 from pytesseract import image_to_string
 import cv2
 import numpy as np
@@ -16,10 +16,9 @@ from PyPDF2 import PdfFileReader, PdfFileWriter
 import glob
 from pathlib import Path
 
-
 """
 Goal :
-	- Renommer automatiquement les fichiers PDF
+	- Renommer automatiquement les fichiers PDFx&
 	- Supprimer les pages blanches
 
 """
@@ -71,22 +70,21 @@ class ScanFacture():
         df_prestataire = pd.read_excel(filename)
 
 
+        df_drop_na = df_prestataire[["Unnamed: 1", "Unnamed: 5"]].dropna()
+        df_rename=df_drop_na.rename(columns={"Unnamed: 1": 'Numéro prestataire', "Unnamed: 5": "Nom préstataire"})
+        df_sort=df_rename.sort_values("Nom préstataire")
 
-        df_prestataire = df_prestataire[["Unnamed: 1", "Unnamed: 5"]].dropna()
-        df_prestataire=df_prestataire.rename(columns={"Unnamed: 1": 'Numéro prestataire', "Unnamed: 5": "Nom préstataire"})
-        df_prestataire=df_prestataire.sort_values("Nom préstataire")
-        df_prestataire=df_prestataire.replace(to_replace = r'\s\(\d*\)', value ="", regex=True)
-        df_prestataire=df_prestataire.drop_duplicates(subset=['Nom préstataire'])
+        df_regex=df_sort.replace(r'\s*\(.*\).*', "", regex=True)
+        df_regex=df_regex.replace(r'EDF\s.*', "EDF", regex=True)
+        df_regex=df_regex.replace(r'FONCIA\s.*', "FONCIA", regex=True)
+        df_regex=df_regex.replace(r'CITY\s.*', "CITY", regex=True)
+        df_regex=df_regex.replace(r'CITYA\s.*', "CITYA", regex=True)
+        df_regex=df_regex.drop_duplicates(subset=['Nom préstataire'])
 
-        self.list_numero_prestataire = list(set(df_prestataire['Numéro prestataire']))
-        # self.list_numero_prestataire.sort()
+        self.list_numero_prestataire = list(set(df_regex['Numéro prestataire']))
+        self.list_nom_prestataire = list(set(df_regex['Nom préstataire']))
 
-        self.list_nom_prestataire = list(set(df_prestataire['Nom préstataire']))
-        # self.list_nom_prestataire.sort()
-
-        # print(self.list_nom_prestataire)
-
-        pass
+        return
 
     def init_dataframe_proprietaire(self):
         frozen = 'not'
@@ -478,6 +476,10 @@ class ScanFacture():
         if self.prix_ttc:
             return
 
+        
+
+        print(prices)
+
         possible_matches_fine_maille=[]
         possible_matches_moyenne_maille=[]
         possible_matches_grosse_maille=[]
@@ -571,42 +573,9 @@ class ScanFacture():
         if possible_matches:
             possible_matches=possible_matches[:5]
             nom_prestataire = self.ask_and_return_possible_match(possible_matches)
-            print(nom_prestataire)
             if nom_prestataire : 
                 self.nom_prestataire=nom_prestataire
                 return
-
-        # Méthode approximation
-        if False:
-            #Méthode approximative
-            lines = [line for line in self.scanned_text.splitlines() if len(line)>2 & len(line)<27]
-            possible_matches=[]
-            print(lines)
-            print(len(lines))
-            for nom_prestataire in self.list_nom_prestataire:
-                possible_match=self.get_matches(nom_prestataire,lines)
-                if possible_match[1]>=95:
-                    print(possible_match[0])
-                    possible_matches.insert(0,(nom_prestataire,possible_match[1]))
-                # elif(possible_match[1]>87):
-                #     possible_matches.append((nom_prestataire,possible_match[1]))
-                
-            if possible_matches:
-                print("J'ai trouvé quelque chose !")
-                possible_matches=sorted(possible_matches, key = lambda x: x[1],reverse=True)
-                possible_matches=list(dict.fromkeys(possible_matches))
-                possible_matches=possible_matches[:5]
-
-                possible_matches = [tuple[0] for tuple in possible_matches]
-                
-                nom_prestataire = self.ask_and_return_possible_match(possible_matches)
-                if nom_prestataire:
-                    self.nom_prestataire=nom_prestataire
-                    return
-            else :
-                # print("La recherche approximative n'a rien donné.\n")
-                pass
-
 
         print("Essayez vous pour voir ?\n(Vous pouvez écrire approximativement)")
         # self.clear_variables()

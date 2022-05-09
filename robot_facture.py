@@ -67,7 +67,7 @@ class ScanFacture():
     
     def init_dataframe_prestataire(self):
         df_prestataire=None
-        filename=glob.glob("*frn*")[0]
+        filename=glob.glob("./input/*ourniss*")[0]
         df_prestataire = pd.read_excel(filename)
 
 
@@ -100,7 +100,7 @@ class ScanFacture():
         df_mandats=None
         try:
             # Si jamais il y a plusieurs fichiers Mandats, on prend le 1er de la liste
-            filename=glob.glob("./*mand*.xl*")[0]
+            filename=glob.glob("./input/*mand*.xl*")[0]
             pre = os.getcwd()
             path = os.path.join(pre,filename)
             df_mandats = pd.read_excel(path).astype(str)
@@ -450,12 +450,13 @@ class ScanFacture():
         self.numero_mandat_proprietaire=None
         self.addresse_proprietaire=None
         self.nom_proprietaire=None
+        self.nom_prestataire=None
         return
 
     def display_found_variables(self):
         print("Valeurs retrouvées : ")
         d=[('N/A' if v is None else v for v in [self.numero_mandat_proprietaire,self.nom_proprietaire,self.addresse_proprietaire,self.prix_ttc,self.nom_prestataire])]
-        df = pd.DataFrame(d, columns = ['N°','Nom','Adresse','prix','nom_prestataire'])
+        df = pd.DataFrame(d, columns = ['N°','Nom','Adresse','Prix','Nom Prestataire'])
 
         print(df.to_string(index=False))
 
@@ -482,11 +483,11 @@ class ScanFacture():
         re_grosse=r'\d+[.,]+\d{2}'
 
         # Fine Maille
-        possible_matches_fine_maille = list(dict.fromkeys([str('{0:.2f}'.format(float(e.replace(',','.').replace(" ", ""))))+"€" for e in re.findall(re_fine, prices,re.IGNORECASE) if len(str('{0:.2f}'.format(float(e.replace(',','.').replace(" ", "")))))>4 and len(str('{0:.2f}'.format(float(e.replace(',','.').replace(" ", "")))))<13 ]))
+        possible_matches_fine_maille = list(dict.fromkeys([str('{0:.2f}'.format(float(e.replace(',','.').replace(" ", ""))))+"€" for e in re.findall(re_fine, prices,re.IGNORECASE) if float(e.replace(',','.').replace(" ", ""))>0 and float(e.replace(',','.').replace(" ", "")) < 50000 ]))
         possible_matches_fine_maille=possible_matches_fine_maille[:2]
 
         # Moyenne Maille
-        possible_matches_moyenne_maille = list(dict.fromkeys([str('{0:.2f}'.format(float(e.replace(',','.').replace(" ", ""))))+"€" for e in re.findall(re_moyenne, prices,re.IGNORECASE) if len(str('{0:.2f}'.format(float(e.replace(',','.').replace(" ", "")))))>4 and len(str('{0:.2f}'.format(float(e.replace(',','.').replace(" ", "")))))<13 ]))
+        possible_matches_moyenne_maille = list(dict.fromkeys([str('{0:.2f}'.format(float(e.replace(',','.').replace(" ", ""))))+"€" for e in re.findall(re_moyenne, prices,re.IGNORECASE) if float(e.replace(',','.').replace(" ", ""))>0 and float(e.replace(',','.').replace(" ", "")) < 50000 ]))
         possible_matches_moyenne_maille = list(set(possible_matches_moyenne_maille) - set(possible_matches_fine_maille))
         possible_matches_moyenne_maille.sort(reverse=True)
         possible_matches_moyenne_maille=possible_matches_moyenne_maille[:5]
@@ -668,7 +669,7 @@ class ScanFacture():
             self.rename_used_pdf()
             user_input=self.ask_user_choices("Souhaitez-vous traiter un autre fichier ?",["Oui","Non"],has_ignore_answer=False)
             if user_input -1 :
-                print("J'espère avoir pu vous aider, bonne journée :) !")
+                print("Bonne journée :) !")
                 time.sleep(3)
                 break
 
@@ -686,7 +687,7 @@ class DataReader():
     def open_xlsx(self):
         try:
             # Si jamais il y a plusieurs fichiers Mandats, on prend le 1er de la liste
-            filename=glob.glob("*frn*")[0]
+            filename=glob.glob("./input/*ourniss*")[0]
             print(filename)
             
             file_path = Path(filename)

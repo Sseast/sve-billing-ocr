@@ -156,14 +156,17 @@ class ScanFacture():
 
     def get_pages_from_any_pdf(self):
         print("Récupération des pages du fichier PDF, merci de patienter...")
-        poppler_path = glob.glob("poppler*\\Library\\bin") if  glob.glob("poppler*\\Library\\bin") else glob.glob("C:\\Program Files\\poppler*\\Library\\bin") 
+        poppler_path = glob.glob("poppler*/goo") if  glob.glob("poppler*/") else glob.glob("C:\\Program Files\\poppler*\\") 
+        print(poppler_path)
         if not poppler_path:
             print("Mince, l'application poppler est manquante!\nVeuillez la télécharger en suivant ce lien : https://poppler.freedesktop.org/\nUne fois sur le site, téléchargez la dernière archive de poppler (par exemple poppler-22.04.0.tar.xz).\nOuvrez ensuite le fichier archive téléchargé et extrayez son contenu dans le dossier C:\Program Files\\\nDans cet exemple, votre dossier devrait ressembler à ça : C:\Program Files\poppler-22.04.0\nÀ partir de ce moment là, vous pourrez relancer l'application :)")
             quit()
             
         poppler_path.sort(reverse=True)
         poppler_path=poppler_path[0]
+        print(poppler_path)
         print(self.pdf)
+        time.sleep(1)
         pages = convert_from_path(self.pdf,poppler_path = poppler_path)
         self.pages = pages 
 
@@ -673,60 +676,8 @@ class ScanFacture():
                 time.sleep(3)
                 break
 
-def check_missing_modules():
-    poppler_path = glob.glob("poppler*\\Library\\bin") if  glob.glob("poppler*\\Library\\bin") else glob.glob("C:\\Program Files\\poppler*\\Library\\bin") 
-    
-    if not poppler_path:
-        print("Mince, l'application poppler est manquante!\nVeuillez la télécharger en suivant ce lien : https://poppler.freedesktop.org/\nUne fois sur le site, téléchargez la dernière archive de poppler (par exemple à poppler-22.04.0.tar.xz).\nOuvez ensuite le fichier archive téléchargé et extrayez son contenu dans le dossier C:\Program Files\\\nDans cet exemple, votre dossier devrait ressembler à ça : C:\Program Files\poppler-22.04.0\nÀ partir de ce moment là, vous pourrez relancer l'application :)")
-        quit()
-class DataReader():
-    def __init__(self):
-        pass
-    def open_qpr(self):
-        pass
-    def open_xlsx(self):
-        try:
-            # Si jamais il y a plusieurs fichiers Mandats, on prend le 1er de la liste
-            filename=glob.glob("./input/*ourniss*")[0]
-            print(filename)
-            
-            file_path = Path(filename)
-            file_extension = file_path.suffix.lower()[1:]
-
-            pre = os.getcwd()
-            path = os.path.join(pre,filename)
-
-            # df_mandats = pd.read_excel(path).astype(str)
-                        
-            file_extension = file_path.suffix.lower()[1:]
-            print(file_extension)
-            if file_extension == 'xlsx':
-                df = pd.read_excel(filename, header=1,usecols=['item_type', 'order id', 'order date', 'state', 'priority'])
-            elif file_extension == 'xls':
-                print("------   ----------------------------------------------------------")
-                # df = pd.read_excel(filename, engine='xlrd')
-                # df = pd.read_excel(filename, header=None)
-                # df.to_excel(filename, index=False, header=False)
-                # df = pd.read_excel(filename,  engine='openpyxl')
-                print("------   ----------------------------------------------------------")
-                
-            elif file_extension == 'csv':
-                df = pd.read_csv(filename)
-            else:
-                raise Exception("File not supported")
-
-            print(df)
-        except Exception as err:
-            print(err)
-            
-        pass
-
 def main():
     print("Lancement de l'application, veuillez patienter...")
-
-    # qpr = DataReader()
-    # qpr.open_xlsx()
-
     scanner = ScanFacture()
     scanner.apply()
        

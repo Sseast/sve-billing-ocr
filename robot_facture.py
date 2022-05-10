@@ -145,6 +145,8 @@ class ScanFacture():
         df_regex=df_regex.replace(r'FONCIA\s.*', "FONCIA", regex=True)
         df_regex=df_regex.replace(r'CITY\s.*', "CITY", regex=True)
         df_regex=df_regex.replace(r'CITYA\s.*', "CITYA", regex=True)
+        df_regex=df_regex.replace(r'SVE\s.*', "SVE", regex=True)
+        df_regex=df_regex.replace(r'SVE\s.*', "SURFACE VOLUME ESPACE", regex=True)
         df_regex=df_regex.drop_duplicates(subset=['Nom préstataire'])
 
         self.list_numero_prestataire = list(set(df_regex['Numéro prestataire']))
@@ -269,14 +271,12 @@ class ScanFacture():
         """
         print("Récupération des pages du fichier PDF, merci de patienter...")
         poppler_path = glob.glob("poppler*\\bin") if  glob.glob("poppler*\\bin") else glob.glob("C:\\Program Files\\poppler*\\Library\\bin") 
-        print(poppler_path)
         if not poppler_path:
             print("Mince, l'application poppler est manquante!\nVeuillez la télécharger en suivant ce lien : https://poppler.freedesktop.org/\nUne fois sur le site, téléchargez la dernière archive de poppler (par exemple poppler-22.04.0.tar.xz).\nOuvrez ensuite le fichier archive téléchargé et extrayez son contenu dans le dossier C:\Program Files\\\nDans cet exemple, votre dossier devrait ressembler à ça : C:\Program Files\poppler-22.04.0\nÀ partir de ce moment là, vous pourrez relancer l'application :)")
             quit()
             
         poppler_path.sort(reverse=True)
         poppler_path=poppler_path[0]
-        print(poppler_path)
         print(self.pdf)
         time.sleep(1)
         pages = convert_from_path(self.pdf,poppler_path = poppler_path)
@@ -478,21 +478,25 @@ class ScanFacture():
         if self.numero_mandat_proprietaire:
             self.nom_proprietaire = self.df_mandats.loc[self.df_mandats.MANDAT == str(self.numero_mandat_proprietaire), 'NOM_PROPRIETAIRE'].values.item()
             self.addresse_proprietaire = self.df_mandats.loc[self.df_mandats.MANDAT == str(self.numero_mandat_proprietaire), 'ADRESSE_LOCATION'].values.item()
+            self.display_found_variables()
             return
         
         elif self.nom_proprietaire :
             possible_matches = self.df_mandats.loc[self.df_mandats.NOM_PROPRIETAIRE == self.nom_proprietaire, 'ADRESSE_LOCATION'].values.tolist()
             if len(possible_matches)==1:
                 self.addresse_proprietaire=possible_matches[0]
+                self.display_found_variables()
                 return
 
             addresse_proprietaire = self.ask_and_return_possible_match(possible_matches)
             if addresse_proprietaire :
                 self.addresse_proprietaire=addresse_proprietaire
+                self.display_found_variables()
                 return
         
         if not self.is_augmented_help_activated:
             self.addresse_proprietaire=self.manual_input("Addresse :",self.list_addresse_proprietaire)
+            self.display_found_variables()
             return
 
         scanned_text =self.scanned_text_concatenated
@@ -506,6 +510,7 @@ class ScanFacture():
             addresse_proprietaire = self.ask_and_return_possible_match(possible_matches)
             if addresse_proprietaire : 
                 self.addresse_proprietaire=addresse_proprietaire
+                self.display_found_variables()
                 return
             
         # Méthode approximation
@@ -526,23 +531,16 @@ class ScanFacture():
             addresse_proprietaire = self.ask_and_return_possible_match(possible_matches)
             if addresse_proprietaire : 
                 self.addresse_proprietaire=addresse_proprietaire
+                self.display_found_variables()
                 return
 
         print("Essayez vous pour voir ?\n(Vous pouvez écrire approximativement)")
         self.clear_variables()
 
         self.nom_proprietaire=self.manual_input("Addresse :",self.list_nom_proprietaire)
+        self.display_found_variables()
         return
 
-        """ Loem Ipsum 
-        Parameters:
-        -----------
-        xxx: Loem Ipsum 
-        Return:
-        -------
-        xxx: Loem Ipsum 
-        """
-        
     def ask_and_return_possible_match(self,possible_matches,ask_for_confirmation=True):
         if possible_matches :
             if len(possible_matches)==1 and not ask_for_confirmation:
@@ -584,15 +582,18 @@ class ScanFacture():
         if possible_matches:
             if len(possible_matches)==1:
                 self.numero_mandat_proprietaire = possible_matches[0]
+                self.display_found_variables()
                 return
             else:
                 numero_mandat_proprietaire = self.ask_and_return_possible_match(possible_matches)
                 if numero_mandat_proprietaire:
                     self.numero_mandat_proprietaire=numero_mandat_proprietaire
+                    self.display_found_variables()
                     return
 
         # if not self.is_augmented_help_activated:
         self.numero_mandat_proprietaire=self.manual_input("Numéro mandat :",self.list_numero_mandat)
+        self.display_found_variables()
         return
 
 
@@ -609,7 +610,7 @@ class ScanFacture():
         self.nom_proprietaire=self.nom_proprietaire.replace("/","-").replace("\\","-")
         timestr = time.strftime("%Y%m%d-%H%M%S")
         time_year = time.strftime("%Y")
-        dst = f'{self.directory_pdf}/{time_year}/{self.numero_mandat_proprietaire}/{self.nom_prestataire}/{self.numero_mandat_proprietaire} - {self.nom_proprietaire} - {self.addresse_proprietaire} - {self.prix_ttc} - {timestr}.pdf'
+        dst = f'{self.directory_pdf}/{time_year}/{self.numero_mandat_proprietaire}/{self.nom_prestataire}/{timestr} - {self.numero_mandat_proprietaire} - {self.nom_proprietaire} - {self.addresse_proprietaire} - {self.prix_ttc}.pdf'
         print("La page traitée a été sauvegardée dans un fichier séparé.\n",dst,"\n")
         
         directory_mandat = self.numero_mandat_proprietaire
@@ -711,12 +712,14 @@ class ScanFacture():
         possible_matches_fine_maille=possible_matches_fine_maille[:2]
 
         # Moyenne Maille
+        # possible_matches_moyenne_maille=[]
         possible_matches_moyenne_maille = list(dict.fromkeys([str('{0:.2f}'.format(float(e.replace(',','.').replace(" ", ""))))+"€" for e in re.findall(re_moyenne, prices,re.IGNORECASE) if float(e.replace(',','.').replace(" ", ""))>0 and float(e.replace(',','.').replace(" ", "")) < 50000 ]))
         possible_matches_moyenne_maille = list(set(possible_matches_moyenne_maille) - set(possible_matches_fine_maille))
         possible_matches_moyenne_maille.sort(reverse=True)
         possible_matches_moyenne_maille=possible_matches_moyenne_maille[:5]
 
         possible_matches_prix = possible_matches_fine_maille+possible_matches_moyenne_maille
+        
 
         if possible_matches_prix:
             possible_matches_prix.append("Saisir le montant")
@@ -793,6 +796,7 @@ class ScanFacture():
         -------
         xxx: Loem Ipsum 
         """
+        
         if self.nom_prestataire:
             return
         
@@ -800,8 +804,11 @@ class ScanFacture():
         scanned_text = self.scanned_text_concatenated
 
         if not self.is_augmented_help_activated :
-            self.nom_prestataire = self.manual_input("Prestataire :",self.list_nom_prestataire)
-            return
+            while True :
+                self.nom_prestataire = self.manual_input("Prestataire :",self.list_nom_prestataire)
+                # if self.nom_prestataire: return
+                self.display_found_variables()
+                return
 
         print("\n----------------------------------------")
         print("---------  Recherche Prestataire  ---------")
@@ -816,12 +823,12 @@ class ScanFacture():
             # if re.search(r'.EDF.', scanned_text.upper()):
                 possible_matches.append(nom_prestataire)
 
-
         if possible_matches:
             possible_matches=possible_matches[:5]
             nom_prestataire = self.ask_and_return_possible_match(possible_matches)
             if nom_prestataire : 
                 self.nom_prestataire=nom_prestataire
+                self.display_found_variables()
                 return
 
 
@@ -836,8 +843,10 @@ class ScanFacture():
                 user_input=self.ask_user_choices("Choisissez : ",results)
                 if not user_input==len(results):
                     self.nom_prestataire = results[user_input-1]
+                    self.display_found_variables()
                     return
-            if self.ask_user_choices("Pas de résultat : ",["Réessayer","Autre méthode"],has_ignore_answer=False) -1 : 
+            if self.ask_user_choices("Pas de résultat : ",["Réessayer","Ignorer"],has_ignore_answer=False) -1 : 
+                self.display_found_variables()
                 return
     
     def set_is_augmented_help_activated(self):
@@ -881,19 +890,14 @@ class ScanFacture():
                 self.find_possible_prix_ttc()
 
                 while True:
-                    self.display_found_variables()
                     self.find_nom_proprietaire()
                     
-                    self.display_found_variables()
                     self.find_addresse_proprietaire()
                     
-                    self.display_found_variables()
                     self.find_numero_mandat_proprietaire()
                     
-                    self.display_found_variables()
                     if self.nom_proprietaire and self.addresse_proprietaire and self.numero_mandat_proprietaire :
                         self.find_prestataire()
-                        self.display_found_variables()
                         user_input=self.ask_user_choices("Est-ce correct ? : ",["Oui","Non"],has_ignore_answer=False)
                         if user_input == 1:
                             break

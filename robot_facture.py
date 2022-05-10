@@ -1,7 +1,6 @@
 from turtle import pos
 from pdf2image import convert_from_path
 import pytesseract
-pytesseract.pytesseract.tesseract_cmd = 'T:\\INFORMATIQUE\\Rex Rotary\\Robot Analyse Facture\\Tesseract-OCR\\tesseract.exe'  # your path may be different
 from pytesseract import image_to_string
 import cv2
 import numpy as np
@@ -22,6 +21,23 @@ Goal :
 	- Supprimer les pages blanches
 
 """
+
+# pytesseract.pytesseract.tesseract_cmd = 'T:\\INFORMATIQUE\\Rex Rotary\\Robot Analyse Facture\\Tesseract-OCR\\tesseract.exe'
+
+def filter_dirs(dirs=[]):
+    result = []
+    for dir in dirs:
+        try:
+            files = os.listdir(dir)
+        except:
+            continue
+        tesseract = 'tesseract.exe' in files
+        if tesseract:
+            result.append(dir+"\\tesseract.exe")
+    return result[0]
+
+pytesseract.pytesseract.tesseract_cmd = filter_dirs(['T:\\INFORMATIQUE\\Rex Rotary\\Robot Analyse Facture\\Tesseract-OCR', 'C:\\Program Files\\Tesseract-OCR'])
+
 
 FILEOPENOPTIONS = dict(defaultextension=".pdf", 
                        filetypes=[('pdf file', '*.pdf')])
@@ -55,7 +71,9 @@ class ScanFacture():
         self.init_dataframe_prestataire()
 
     def initVariable(self):
+        self.is_augmented_help_activated=True
         self.scanned_text=None
+        self.scanned_text_concatenated=None
         self.filename_mandats="MANDATS.xlsx"
         self.nom_proprietaire=None
         self.numero_mandat_proprietaire=None
@@ -127,7 +145,7 @@ class ScanFacture():
         return text
 
     def open_pdf(self):
-        
+        print("Veuillez ouvrir un fichier PDF dans la fenêtre qui vient d'apparaitre.")
         self.pdf=fd.askopenfilename(title="Sélectionnez une facture",**FILEOPENOPTIONS)
 
         self.directory_pdf='/'.join(self.pdf.split('/')[0:-1])
@@ -206,6 +224,9 @@ class ScanFacture():
 
     def find_nom_proprietaire(self):
         possible_matches=[]
+        nom_proprietaire=None
+
+        
 
         #Méthode si variables déjà existantes
         if self.nom_proprietaire:
@@ -227,6 +248,10 @@ class ScanFacture():
                     self.nom_proprietaire=nom_proprietaire
                     return
         
+        # if not self.is_augmented_help_activated:
+        #     self.nom_proprietaire=self.manual_input("Nom :",self.list_nom_proprietaire)
+        #     return
+
         #Méthode directe si perfect match
         possible_matches=[]
         for nom_proprietaire in self.list_nom_proprietaire:
@@ -286,13 +311,30 @@ class ScanFacture():
                     return
         return
         
+    def manual_input(self,string,list_data):
+        # print("Recherche du",string)
+        # self.clear_variables()
+        while True:
+            user_input=str(input(string).upper())
+            possible_matches = [variable_to_find for variable_to_find in list_data if user_input in variable_to_find]
+            possible_matches=possible_matches[:5]
+            if possible_matches:
+                variable_to_find = self.ask_and_return_possible_match(possible_matches)
+                if variable_to_find:
+                    return variable_to_find
+                else:
+                    break
+            else:
+                print("Aucun résultat.")
+                if self.ask_user_choices("Pas de résultat : ",["Réessayer","Autre méthode"],has_ignore_answer=False) -1 : 
+                    return
+        
     def find_addresse_proprietaire(self):
         if self.addresse_proprietaire:
             return
         
         possible_matches=[]
-        scanned_text =self.scanned_text_concatenated
-
+        
         print("\n----------------------------------------")
         print("---  Recherche Adresse Proprietaire  ---")
         print("----------------------------------------")
@@ -313,6 +355,12 @@ class ScanFacture():
             if addresse_proprietaire :
                 self.addresse_proprietaire=addresse_proprietaire
                 return
+        
+        # if not self.is_augmented_help_activated:
+        #     self.nom_proprietaire=self.manual_input("Addresse :",self.list_nom_proprietaire)
+        #     return
+
+        scanned_text =self.scanned_text_concatenated
 
         possible_matches=[]
         for addresse_proprietaire in self.list_addresse_proprietaire:
@@ -400,6 +448,10 @@ class ScanFacture():
                     self.numero_mandat_proprietaire=numero_mandat_proprietaire
                     return
 
+        # # if not self.is_augmented_help_activated:
+        # self.nom_proprietaire=self.manual_input("Numéro mandat :",self.list_numero_mandat)
+        # return
+
         print("Essayez vous pour voir ?\n(Vous pouvez écrire approximativement)")
         self.clear_variables()
         while True:
@@ -472,13 +524,15 @@ class ScanFacture():
     def find_possible_prix_ttc(self):
         print("Recherche du prix TTC de la facture.")
         possible_matches_prix=[]
+
+        if not self.is_augmented_help_activated:
+            self.prix_ttc=self.ask_user_ttc_price()
+            return
+        
         prices = self.scanned_text_concatenated
+
         if self.prix_ttc:
             return
-
-        
-
-        print(prices)
 
         possible_matches_fine_maille=[]
         possible_matches_moyenne_maille=[]
@@ -556,6 +610,10 @@ class ScanFacture():
         possible_matches=[]
         scanned_text = self.scanned_text_concatenated
 
+        # if not self.is_augmented_help_activated :
+        #     self.manual_input("Prestataire :",self.list_nom_prestataire)
+        #     return
+
         print("\n----------------------------------------")
         print("---------  Recherche Prestataire  ---------")
         print("----------------------------------------")
@@ -577,6 +635,7 @@ class ScanFacture():
                 self.nom_prestataire=nom_prestataire
                 return
 
+
         print("Essayez vous pour voir ?\n(Vous pouvez écrire approximativement)")
         # self.clear_variables()
         while True:
@@ -594,11 +653,14 @@ class ScanFacture():
     
 
     def apply(self):
+        # if self.ask_user_choices("Souhaitez-vous activer l'aide intelligente ?",["Oui","Non"],False) == 1:
+        #     self.is_augmented_help_activated=True
         while True :
             self.open_pdf()
             self.get_pages_from_any_pdf()
             for i in range(len(self.pages)):
                 print("Traitement de la page",str(i+1)+"/"+str(len(self.pages)),"du fichier PDF.")
+
                 self.page_into_grayscale(self.pages[i])
                 plt.imshow(self.img_normal)
                 self.show_multiple_image()
@@ -607,7 +669,8 @@ class ScanFacture():
                 if self.ask_user_choices("Cette page est-elle une facture ? : ",["Oui","Non"],has_ignore_answer=False) -1 : 
                     continue
                 
-                self.grayscale_to_text()
+                if self.is_augmented_help_activated:
+                    self.grayscale_to_text()
                 
                 self.find_possible_prix_ttc()
 

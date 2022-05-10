@@ -25,6 +25,14 @@ Goal :
 # pytesseract.pytesseract.tesseract_cmd = 'T:\\INFORMATIQUE\\Rex Rotary\\Robot Analyse Facture\\Tesseract-OCR\\tesseract.exe'
 
 def filter_dirs(dirs=[]):
+    """ Loem Ipsum 
+    Parameters:
+    -----------
+    xxx: Loem Ipsum 
+    Return:
+    -------
+    xxx: Loem Ipsum 
+    """
     result = []
     for dir in dirs:
         try:
@@ -52,11 +60,27 @@ else:
     bundle_dir = os.path.dirname(os.path.abspath(__file__))
 
 def resource_path(relative_path):
+    """ Loem Ipsum 
+    Parameters:
+    -----------
+    xxx: Loem Ipsum 
+    Return:
+    -------
+    xxx: Loem Ipsum 
+    """
     """ Get absolute path to resource, works for dev and for PyInstaller """
     base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
     return os.path.join(base_path, relative_path)
 
 def show_exception_and_exit(exc_type, exc_value, tb):
+    """ Loem Ipsum 
+    Parameters:
+    -----------
+    xxx: Loem Ipsum 
+    Return:
+    -------
+    xxx: Loem Ipsum 
+    """
     import traceback
     traceback.print_exception(exc_type, exc_value, tb)
     input("Press key to exit.")
@@ -66,11 +90,27 @@ sys.excepthook = show_exception_and_exit
 
 class ScanFacture():
     def __init__(self):
+        """ Loem Ipsum 
+        Parameters:
+        -----------
+        xxx: Loem Ipsum 
+        Return:
+        -------
+        xxx: Loem Ipsum 
+        """
         self.initVariable()
         self.init_dataframe_proprietaire()
         self.init_dataframe_prestataire()
 
     def initVariable(self):
+        """ Loem Ipsum 
+        Parameters:
+        -----------
+        xxx: Loem Ipsum 
+        Return:
+        -------
+        xxx: Loem Ipsum 
+        """
         self.is_augmented_help_activated=True
         self.scanned_text=None
         self.scanned_text_concatenated=None
@@ -83,6 +123,14 @@ class ScanFacture():
         self.nom_prestataire=None
     
     def init_dataframe_prestataire(self):
+        """ Loem Ipsum 
+        Parameters:
+        -----------
+        xxx: Loem Ipsum 
+        Return:
+        -------
+        xxx: Loem Ipsum 
+        """
         df_prestataire=None
         filename=glob.glob("./input/*ourniss*")[0]
         df_prestataire = pd.read_excel(filename)
@@ -105,6 +153,14 @@ class ScanFacture():
         return
 
     def init_dataframe_proprietaire(self):
+        """ Loem Ipsum 
+        Parameters:
+        -----------
+        xxx: Loem Ipsum 
+        Return:
+        -------
+        xxx: Loem Ipsum 
+        """
         frozen = 'not'
         if getattr(sys, 'frozen', False):
             # we are running in a bundle
@@ -129,7 +185,7 @@ class ScanFacture():
             # input("Fin de l'exécution...")
             
         self.df_mandats=df_mandats
-        self.list_numero_mandat = list(set(self.df_mandats['MANDAT'].astype('int')))
+        self.list_numero_mandat = list(set(self.df_mandats['MANDAT']))
         self.list_numero_mandat.sort()
         # natsorted(self.list_numero_mandat)
 
@@ -141,10 +197,26 @@ class ScanFacture():
         
 
     def convert_image_to_text(self,file):
+        """ Loem Ipsum 
+        Parameters:
+        -----------
+        xxx: Loem Ipsum 
+        Return:
+        -------
+        xxx: Loem Ipsum 
+        """
         text = image_to_string(file)
         return text
 
     def open_pdf(self):
+        """ Loem Ipsum 
+        Parameters:
+        -----------
+        xxx: Loem Ipsum 
+        Return:
+        -------
+        xxx: Loem Ipsum 
+        """
         print("Veuillez ouvrir un fichier PDF dans la fenêtre qui vient d'apparaitre.")
         self.pdf=fd.askopenfilename(title="Sélectionnez une facture",**FILEOPENOPTIONS)
 
@@ -157,6 +229,14 @@ class ScanFacture():
         return 
 
     def show_image(self,img):                
+        """ Loem Ipsum 
+        Parameters:
+        -----------
+        xxx: Loem Ipsum 
+        Return:
+        -------
+        xxx: Loem Ipsum 
+        """
         cv2.namedWindow("output", cv2.WINDOW_NORMAL) 
         cv2.resize(img, (900, 200))
         cv2.imshow("output", img)
@@ -164,6 +244,14 @@ class ScanFacture():
         return
     
     def show_multiple_image(self):  
+        """ Loem Ipsum 
+        Parameters:
+        -----------
+        xxx: Loem Ipsum 
+        Return:
+        -------
+        xxx: Loem Ipsum 
+        """
         cv2.namedWindow("output", cv2.WINDOW_NORMAL) 
         cv2.resize(self.img_normal, (200, 200))
         cv2.imshow("output", self.img_normal)
@@ -171,6 +259,14 @@ class ScanFacture():
         return
 
     def get_pages_from_any_pdf(self):
+        """ Loem Ipsum 
+        Parameters:
+        -----------
+        xxx: Loem Ipsum 
+        Return:
+        -------
+        xxx: Loem Ipsum 
+        """
         print("Récupération des pages du fichier PDF, merci de patienter...")
         poppler_path = glob.glob("poppler*\\bin") if  glob.glob("poppler*\\bin") else glob.glob("C:\\Program Files\\poppler*\\Library\\bin") 
         print(poppler_path)
@@ -187,6 +283,16 @@ class ScanFacture():
         self.pages = pages 
 
     def page_into_grayscale(self,page):
+        """ Loem Ipsum 
+        Parameters:
+        -----------
+        xxx: Loem Ipsum 
+        Return:
+        -------
+        xxx: Loem Ipsum 
+        """
+
+
         # 1. Load the image
         img = np.asarray(page)
         # 2. Resize the image
@@ -212,6 +318,17 @@ class ScanFacture():
         return 
 
     def grayscale_to_text(self):
+        """ Loem Ipsum 
+        Parameters:
+        -----------
+        xxx: Loem Ipsum 
+        Return:
+        -------
+        xxx: Loem Ipsum 
+        """
+        if not self.is_augmented_help_activated:
+            return
+
         print("Analyse du texte de la page... Veuillez patienter :)")
         self.scanned_text_concatenated=" ".join([self.convert_image_to_text(txt) for txt in self.list_adaptive_threshold]).replace("\n","")
         
@@ -219,14 +336,30 @@ class ScanFacture():
 
         return
   
-    def get_matches(self,query,choices,limit=3):
-        return process.extractOne(query,choices)
+    def get_matches(self,query,list_of_strings):
+        """ Returns best fuzzy matching between a string and a list of string associated with probability
+        Parameters:
+        -----------
+        query: the string that we are looking upon
+        list_of_strings: a list of string that may contain the query 
+        Return:
+        -------
+        best_match: returns the most probable match between query and list_of_strings
+        """
+        best_match = process.extractOne(query,list_of_strings)
+        return best_match
 
     def find_nom_proprietaire(self):
+        """ Loem Ipsum 
+        Parameters:
+        -----------
+        xxx: Loem Ipsum 
+        Return:
+        -------
+        xxx: Loem Ipsum 
+        """
         possible_matches=[]
         nom_proprietaire=None
-
-        
 
         #Méthode si variables déjà existantes
         if self.nom_proprietaire:
@@ -237,7 +370,7 @@ class ScanFacture():
         print("------------------------------------")
         if self.numero_mandat_proprietaire:
             self.nom_proprietaire = self.df_mandats.loc[self.df_mandats.MANDAT == str(self.numero_mandat_proprietaire), 'NOM_PROPRIETAIRE'].values.item()
-            # self.addresse_proprietaire = self.df_mandats.loc[self.df_mandats.MANDAT == str(self.numero_mandat_proprietaire), 'ADRESSE_LOCATION'].values.item()
+            
             return
         if self.addresse_proprietaire :
             possible_matches = self.df_mandats.loc[self.df_mandats.ADRESSE_LOCATION == self.addresse_proprietaire, 'NOM_PROPRIETAIRE'].values.tolist()
@@ -248,9 +381,9 @@ class ScanFacture():
                     self.nom_proprietaire=nom_proprietaire
                     return
         
-        # if not self.is_augmented_help_activated:
-        #     self.nom_proprietaire=self.manual_input("Nom :",self.list_nom_proprietaire)
-        #     return
+        if not self.is_augmented_help_activated:
+            self.nom_proprietaire=self.manual_input("Nom :",self.list_nom_proprietaire)
+            return
 
         #Méthode directe si perfect match
         possible_matches=[]
@@ -294,32 +427,26 @@ class ScanFacture():
         # Méthode approximation
         print("Essayez vous pour voir ?\n(Vous pouvez écrire approximativement)")
         self.clear_variables()
-        while True:
-            user_input=str(input("Nom : ").upper())
-            possible_matches = [nom_proprietaire for nom_proprietaire in self.list_nom_proprietaire if user_input in nom_proprietaire]
-            possible_matches=possible_matches[:5]
-            if possible_matches:
-                nom_proprietaire = self.ask_and_return_possible_match(possible_matches)
-                if nom_proprietaire:
-                    self.nom_proprietaire = nom_proprietaire
-                    return
-                else:
-                    break
-            else:
-                print("Aucun résultat.")
-                if self.ask_user_choices("Pas de résultat : ",["Réessayer","Autre méthode"],has_ignore_answer=False) -1 : 
-                    return
+        self.nom_proprietaire = self.manual_input("Nom : ",self.list_nom_proprietaire)
+
         return
-        
+
     def manual_input(self,string,list_data):
-        # print("Recherche du",string)
-        # self.clear_variables()
+        """ Loem Ipsum 
+        Parameters:
+        -----------
+        xxx: Loem Ipsum 
+        Return:
+        -------
+        xxx: Loem Ipsum 
+        """
         while True:
             user_input=str(input(string).upper())
             possible_matches = [variable_to_find for variable_to_find in list_data if user_input in variable_to_find]
-            possible_matches=possible_matches[:5]
+
             if possible_matches:
-                variable_to_find = self.ask_and_return_possible_match(possible_matches)
+                possible_matches=possible_matches[:5]
+                variable_to_find = self.ask_and_return_possible_match(possible_matches,False)
                 if variable_to_find:
                     return variable_to_find
                 else:
@@ -330,6 +457,14 @@ class ScanFacture():
                     return
         
     def find_addresse_proprietaire(self):
+        """ Loem Ipsum 
+        Parameters:
+        -----------
+        xxx: Loem Ipsum 
+        Return:
+        -------
+        xxx: Loem Ipsum 
+        """
         if self.addresse_proprietaire:
             return
         
@@ -356,9 +491,9 @@ class ScanFacture():
                 self.addresse_proprietaire=addresse_proprietaire
                 return
         
-        # if not self.is_augmented_help_activated:
-        #     self.nom_proprietaire=self.manual_input("Addresse :",self.list_nom_proprietaire)
-        #     return
+        if not self.is_augmented_help_activated:
+            self.addresse_proprietaire=self.manual_input("Addresse :",self.list_addresse_proprietaire)
+            return
 
         scanned_text =self.scanned_text_concatenated
 
@@ -395,19 +530,19 @@ class ScanFacture():
 
         print("Essayez vous pour voir ?\n(Vous pouvez écrire approximativement)")
         self.clear_variables()
-        while True:
-            user_input=str(input("Tapez l'addresse : ").upper())
-            results = [addresse_proprietaire for addresse_proprietaire in self.list_addresse_proprietaire if user_input in addresse_proprietaire]
-            results=results[:5]
-            
-            if results:
-                user_input=self.ask_user_choices("Choisissez : ",results)
-                if not user_input==len(results):
-                    self.addresse_proprietaire = results[user_input-1]
-                    return
-            if self.ask_user_choices("Pas de résultat : ",["Réessayer","Autre méthode"],has_ignore_answer=False) -1 : 
-                return
-    
+
+        self.nom_proprietaire=self.manual_input("Addresse :",self.list_nom_proprietaire)
+        return
+
+        """ Loem Ipsum 
+        Parameters:
+        -----------
+        xxx: Loem Ipsum 
+        Return:
+        -------
+        xxx: Loem Ipsum 
+        """
+        
     def ask_and_return_possible_match(self,possible_matches,ask_for_confirmation=True):
         if possible_matches :
             if len(possible_matches)==1 and not ask_for_confirmation:
@@ -421,6 +556,14 @@ class ScanFacture():
         return None
        
     def find_numero_mandat_proprietaire(self):
+        """ Loem Ipsum 
+        Parameters:
+        -----------
+        xxx: Loem Ipsum 
+        Return:
+        -------
+        xxx: Loem Ipsum 
+        """
         possible_matches = [] 
         if self.numero_mandat_proprietaire:
             return
@@ -448,30 +591,20 @@ class ScanFacture():
                     self.numero_mandat_proprietaire=numero_mandat_proprietaire
                     return
 
-        # # if not self.is_augmented_help_activated:
-        # self.nom_proprietaire=self.manual_input("Numéro mandat :",self.list_numero_mandat)
-        # return
-
-        print("Essayez vous pour voir ?\n(Vous pouvez écrire approximativement)")
-        self.clear_variables()
-        while True:
-            user_input=str(input("Tapez le numéro de mandat : ").upper())
-            results = [numero_mandat_proprietaire for numero_mandat_proprietaire in self.list_numero_mandat if user_input in str(numero_mandat_proprietaire)]
-            results=results[:5]
-            if len(results)==1:
-                self.numero_mandat_proprietaire=results[0]
-                return
-            
-            elif len(results)>1:
-                user_input=self.ask_user_choices("Choisissez : ",results)
-                if not user_input==len(results):
-                    self.numero_mandat_proprietaire = results[user_input-1]
-                    return
-            if self.ask_user_choices("Pas de résultat : ",["Réessayer","Autre méthode"],has_ignore_answer=False) -1 : 
-                return
+        # if not self.is_augmented_help_activated:
+        self.numero_mandat_proprietaire=self.manual_input("Numéro mandat :",self.list_numero_mandat)
         return
 
+
     def split_and_rename(self,i):
+        """ Loem Ipsum 
+        Parameters:
+        -----------
+        xxx: Loem Ipsum 
+        Return:
+        -------
+        xxx: Loem Ipsum 
+        """
         self.addresse_proprietaire=self.addresse_proprietaire.replace("/","-").replace("\\","-")
         self.nom_proprietaire=self.nom_proprietaire.replace("/","-").replace("\\","-")
         timestr = time.strftime("%Y%m%d-%H%M%S")
@@ -500,6 +633,14 @@ class ScanFacture():
         return
 
     def clear_variables(self):
+        """ Loem Ipsum 
+        Parameters:
+        -----------
+        xxx: Loem Ipsum 
+        Return:
+        -------
+        xxx: Loem Ipsum 
+        """
         self.numero_mandat_proprietaire=None
         self.addresse_proprietaire=None
         self.nom_proprietaire=None
@@ -507,6 +648,14 @@ class ScanFacture():
         return
 
     def display_found_variables(self):
+        """ Loem Ipsum 
+        Parameters:
+        -----------
+        xxx: Loem Ipsum 
+        Return:
+        -------
+        xxx: Loem Ipsum 
+        """
         print("Valeurs retrouvées : ")
         d=[('N/A' if v is None else v for v in [self.numero_mandat_proprietaire,self.nom_proprietaire,self.addresse_proprietaire,self.prix_ttc,self.nom_prestataire])]
         df = pd.DataFrame(d, columns = ['N°','Nom','Adresse','Prix','Nom Prestataire'])
@@ -514,6 +663,14 @@ class ScanFacture():
         print(df.to_string(index=False))
 
     def ask_user_ttc_price(self):
+        """ Loem Ipsum 
+        Parameters:
+        -----------
+        xxx: Loem Ipsum 
+        Return:
+        -------
+        xxx: Loem Ipsum 
+        """
         while True :
             try:
                 user_input = float(input("Veuillez indiquer le montant : ").replace(",","."))
@@ -522,6 +679,14 @@ class ScanFacture():
                 print("La valeur indiquée semble incorrecte. Veuillez réessayer.")
 
     def find_possible_prix_ttc(self):
+        """ Loem Ipsum 
+        Parameters:
+        -----------
+        xxx: Loem Ipsum 
+        Return:
+        -------
+        xxx: Loem Ipsum 
+        """
         print("Recherche du prix TTC de la facture.")
         possible_matches_prix=[]
 
@@ -569,6 +734,14 @@ class ScanFacture():
             return
         return
         
+        """ Loem Ipsum 
+        Parameters:
+        -----------
+        xxx: Loem Ipsum 
+        Return:
+        -------
+        xxx: Loem Ipsum 
+        """
     def ask_user_choices(self,question,choices,has_ignore_answer=True,display_choices=True):
         print(question)
         if(has_ignore_answer):
@@ -589,6 +762,14 @@ class ScanFacture():
                 print("La valeur indiquée semble incorrecte. Veuillez réessayer.")
         
     def rename_used_pdf(self):
+        """ Loem Ipsum 
+        Parameters:
+        -----------
+        xxx: Loem Ipsum 
+        Return:
+        -------
+        xxx: Loem Ipsum 
+        """
         used_pdf_directory = self.directory_pdf+"/PDF traités"
         
         if not os.path.exists(str(used_pdf_directory)):
@@ -604,15 +785,23 @@ class ScanFacture():
         pass
             
     def find_prestataire(self):
+        """ Loem Ipsum 
+        Parameters:
+        -----------
+        xxx: Loem Ipsum 
+        Return:
+        -------
+        xxx: Loem Ipsum 
+        """
         if self.nom_prestataire:
             return
         
         possible_matches=[]
         scanned_text = self.scanned_text_concatenated
 
-        # if not self.is_augmented_help_activated :
-        #     self.manual_input("Prestataire :",self.list_nom_prestataire)
-        #     return
+        if not self.is_augmented_help_activated :
+            self.nom_prestataire = self.manual_input("Prestataire :",self.list_nom_prestataire)
+            return
 
         print("\n----------------------------------------")
         print("---------  Recherche Prestataire  ---------")
@@ -651,10 +840,29 @@ class ScanFacture():
             if self.ask_user_choices("Pas de résultat : ",["Réessayer","Autre méthode"],has_ignore_answer=False) -1 : 
                 return
     
+    def set_is_augmented_help_activated(self):
+        """ Loem Ipsum 
+        Parameters:
+        -----------
+        xxx: Loem Ipsum 
+        Return:
+        -------
+        xxx: Loem Ipsum 
+        """
+        if self.ask_user_choices("Souhaitez-vous activer l'aide intelligente ?",["Oui","Non"],False) == 2:
+            self.is_augmented_help_activated=False
+        return
 
     def apply(self):
-        # if self.ask_user_choices("Souhaitez-vous activer l'aide intelligente ?",["Oui","Non"],False) == 1:
-        #     self.is_augmented_help_activated=True
+        """ Loem Ipsum 
+        Parameters:
+        -----------
+        xxx: Loem Ipsum 
+        Return:
+        -------
+        xxx: Loem Ipsum 
+        """
+        self.set_is_augmented_help_activated()
         while True :
             self.open_pdf()
             self.get_pages_from_any_pdf()
@@ -669,9 +877,7 @@ class ScanFacture():
                 if self.ask_user_choices("Cette page est-elle une facture ? : ",["Oui","Non"],has_ignore_answer=False) -1 : 
                     continue
                 
-                if self.is_augmented_help_activated:
-                    self.grayscale_to_text()
-                
+                self.grayscale_to_text()
                 self.find_possible_prix_ttc()
 
                 while True:
@@ -685,8 +891,8 @@ class ScanFacture():
                     self.find_numero_mandat_proprietaire()
                     
                     self.display_found_variables()
-                    self.find_prestataire()
                     if self.nom_proprietaire and self.addresse_proprietaire and self.numero_mandat_proprietaire :
+                        self.find_prestataire()
                         self.display_found_variables()
                         user_input=self.ask_user_choices("Est-ce correct ? : ",["Oui","Non"],has_ignore_answer=False)
                         if user_input == 1:
@@ -709,6 +915,14 @@ class ScanFacture():
                 break
 
 def main():
+    """ Loem Ipsum 
+    Parameters:
+    -----------
+    xxx: Loem Ipsum 
+    Return:
+    -------
+    xxx: Loem Ipsum 
+    """
     print("Lancement de l'application, veuillez patienter...")
     scanner = ScanFacture()
     scanner.apply()
